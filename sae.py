@@ -3,10 +3,11 @@ from math import pi, cos, acos, sin
 #import numpy as np
 #import os
 
-itineraire = pd.read_table('F://Documents/IUT/Annee1/s2/mahs/fichier-itineraires-randonnee.csv',
+"""itineraire = pd.read_table('F://Documents/IUT/Annee1/s2/mahs/fichier-itineraires-randonnee.csv',
                          sep = ";",
-                         encoding="latin_1")
+                         encoding="latin_1")"""
 
+itineraire = pd.read_table('C:/Users/maxmo/OneDrive/Documents/IUT/Annee1/S2_02/fichier-itineraires-randonnee.csv', sep = ";", encoding="latin_1")
 ##Partie C 
 
 #nettoyage du fichier en utilisant le parcourant et ajoutant les uniques sommet dans une liste qui sera transforme en dataframe
@@ -101,16 +102,17 @@ for ind in point_unique.index:
     dictionnaire_voisin_distance[point_unique.loc[ind,"nom_point"]] = []
 
 
-#Parcours de point_unique et ajout dans le dictionnaire si il s'agit des voisins
+#Calcul de distance et ajout du résultat dans une colonne du dataframe appelé "distance"
+for ind in itineraire.index :
+    itineraire.loc[ind, "distance"] = distanceGPS(float(itineraire.loc[ind, "latitude_depart"]), float(itineraire.loc[ind, "latitude_arrivée"]),
+                                                   float(itineraire.loc[ind, "longitude_depart"]), float(itineraire.loc[ind, "longitude_arrivée"]))
 
+
+#Parcours de point_unique et ajout dans le dictionnaire si il s'agit des voisins avec la distance (sous frome de tuple)
 for indexX in point_unique.index:
     for indexParcours in point_unique.index:
-        if point_unique.loc[indexX, "nom_point"] == itineraire.loc[indexParcours, "nom_dep"]:  
-            dictionnaire_voisin_distance[point_unique.loc[indexX, "nom_point"]] = dictionnaire_voisin[point_unique.loc[indexX, "nom_arr"]], distanceGPS(float(itineraire.loc[indexX, "latitude_depart"]), 
-                                                                                                                                                  float(itineraire.loc[indexX, "latitude_arrivée"]), 
-                                                                                                                                                  float(itineraire.loc[indexX, "longitude_depart"]),
-                                                                                                                                                  float(itineraire.loc[indexX, "longitude_arrivée"]))
+        if point_unique.loc[indexX, "nom_point"] == itineraire.loc[indexParcours, "nom_dep"]:
+            dictionnaire_voisin_distance[point_unique.loc[indexX, "nom_point"]].append((itineraire.loc[indexParcours, "nom_arr"], itineraire.loc[indexParcours, "distance"]))
         elif point_unique.loc[indexX, "nom_point"] == itineraire.loc[indexParcours, "nom_arr"]:
-             dictionnaire_voisin[point_unique.loc[indexX, "nom_point"]].append(itineraire.loc[indexParcours, "nom_dep"])
-
+             dictionnaire_voisin_distance[point_unique.loc[indexX, "nom_point"]].append((itineraire.loc[indexParcours, "nom_dep"], itineraire.loc[indexParcours, "distance"]))
 
