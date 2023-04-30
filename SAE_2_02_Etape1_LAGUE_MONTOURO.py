@@ -1,7 +1,8 @@
+#importation des modules et fonctions utilent pour le code
 import pandas as pd
 from math import pi, cos, acos, sin
 import numpy as np
-#import os
+
 
 """différents chemins d'aacès selon les machines utilisées"""
 """itineraire = pd.read_table('F://Documents/IUT/Annee1/s2/mahs/fichier-itineraires-randonnee.csv',
