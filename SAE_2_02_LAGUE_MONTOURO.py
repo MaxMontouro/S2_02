@@ -1,13 +1,15 @@
 import pandas as pd
 from math import pi, cos, acos, sin
-#import numpy as np
+import numpy as np
 #import os
 
+"""différents chemins d'aacès selon les machines utilisées"""
 """itineraire = pd.read_table('F://Documents/IUT/Annee1/s2/mahs/fichier-itineraires-randonnee.csv',
                          sep = ";",
                          encoding="latin_1")"""
 
 itineraire = pd.read_table('C:/Users/maxmo/OneDrive/Documents/IUT/Annee1/S2_02/fichier-itineraires-randonnee.csv', sep = ";", encoding="latin_1")
+
 ##Partie C 
 
 #nettoyage du fichier en utilisant le parcourant et ajoutant les uniques sommet dans une liste qui sera transforme en dataframe
@@ -65,8 +67,7 @@ itineraire.columns = ['id_local', 'uuid', 'gestion', 'pratique (été)', 'type_i
        'latitude_depart', 'nom_arr', 'coordonnée_arrivée', 'longitude_arrivée', 'latitude_arrivée']
 
 
-##PARTIE D
-
+##PARTIE D.1
 dictionnaire_voisin = {}
 
 #initialisation du dictionnaire avec comme couple clé/valeur le nom des points de point_unique/une liste vide
@@ -93,16 +94,7 @@ def distanceGPS(latA,latB,longA,longB):
 # angle en radians entre les 2 points
         S = acos(round(sin(ltA)*sin(ltB) + cos(ltA)*cos(ltB)*cos(abs(loB-loA)),14))
 # distance entre les 2 points, comptée sur un arc de grand cercle
-        return S*RT
-
-#PARTIE B écart
-#Calcul de l'écart
-itineraire["écart"] = itineraire["longueur"] - itineraire["distance"]
-
-for ind in itineraire.index:
-    if itineraire.loc[ind, "écart"] > 5:
-        itineraire.loc[ind, "longueur"] = itineraire.loc[ind, "distance"]
-    
+        return S*RT   
 
 dictionnaire_voisin_distance = {}
 
@@ -116,7 +108,15 @@ for ind in itineraire.index :
     itineraire.loc[ind, "distance"] = distanceGPS(float(itineraire.loc[ind, "latitude_depart"]), float(itineraire.loc[ind, "latitude_arrivée"]),
                                                    float(itineraire.loc[ind, "longitude_depart"]), float(itineraire.loc[ind, "longitude_arrivée"]))
 
+#PARTIE B écart
+#Calcul de l'écart
+itineraire["écart"] = itineraire["longueur"] - itineraire["distance"]
 
+for ind in itineraire.index:
+    if itineraire.loc[ind, "écart"] > 5:
+        itineraire.loc[ind, "longueur"] = itineraire.loc[ind, "distance"]
+
+#☺Partie D.2
 #Parcours de point_unique et ajout dans le dictionnaire si il s'agit des voisins avec la distance (sous forme de tuple)
 for indexX in point_unique.index:
     for indexParcours in point_unique.index:
@@ -126,23 +126,36 @@ for indexX in point_unique.index:
              dictionnaire_voisin_distance[point_unique.loc[indexX, "nom_point"]].append((itineraire.loc[indexParcours, "nom_dep"], itineraire.loc[indexParcours, "distance"]))
 
 # Partie D.3
-
-nom_point = list(dictionnaire_voisin_distance.keys())
-        
+#Création de 2 fonction pour pouvoir accéder aux sommets du graphe par leur nom
 def nom(indice):
-    return itineraire.iloc[indice].name
+    nomPoint = point_unique.loc[indice, "nom_point"]
+    return nomPoint
 
-def indice_nom(nomPoint):
-    for ind in range(len(nom_point)): 
+def indice_som(nomPoint):
+    for ind in range(len(nom_point)):
         if itineraire.iloc[ind].name == nomPoint:
             return ind
 
-for i in range (len(nom_point)):
-    nom_point[i] = []
-    
+#On va créer une liste contenant tous les noms des points
+nom_point = list(dictionnaire_voisin_distance.keys())
+
+#Créer une matrice avec la même taille que la liste des points
+taille = len(nom_point)
+matricePoids = np.zeros((taille, taille))
+        
+
+#On remplit la matrice avec les distances du dictionnaire dictionnaire_voisin_distance
 for i in range(len(nom_point)):
     for j in range(len(nom_point)):
-        if itineraire.loc[j, "nom_arr"] == dictionnaire_voisin[nom_point[i]]
-            nom_point[i][j].append(dictionnaire_voisin_distance[nom(i)])
-
-            
+        if i != j:
+            pointDep = nom(i)
+            pointArr = nom(j)
+            if pointDep in dictionnaire_voisin_distance:
+                for (voisin, poids) in dictionnaire_voisin_distance[pointDep]:
+                    if voisin == pointArr:
+                        matricePoids[i][j] = poids
+                        break
+                    else:
+                        matricePoids[i][j] = 'inf'
+        else:
+            matricePoids[i][j] = 'inf'
