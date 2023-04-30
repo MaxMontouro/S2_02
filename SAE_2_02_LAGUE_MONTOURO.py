@@ -95,6 +95,15 @@ def distanceGPS(latA,latB,longA,longB):
 # distance entre les 2 points, comptée sur un arc de grand cercle
         return S*RT
 
+#PARTIE B écart
+#Calcul de l'écart
+itineraire["écart"] = itineraire["longueur"] - itineraire["distance"]
+
+for ind in itineraire.index:
+    if itineraire.loc[ind, "écart"] > 5:
+        itineraire.loc[ind, "longueur"] = itineraire.loc[ind, "distance"]
+    
+
 dictionnaire_voisin_distance = {}
 
 #initialisation du dictionnaire avec comme couple clé/valeur le nom des points de point_unique/une liste vide
@@ -108,7 +117,7 @@ for ind in itineraire.index :
                                                    float(itineraire.loc[ind, "longitude_depart"]), float(itineraire.loc[ind, "longitude_arrivée"]))
 
 
-#Parcours de point_unique et ajout dans le dictionnaire si il s'agit des voisins avec la distance (sous frome de tuple)
+#Parcours de point_unique et ajout dans le dictionnaire si il s'agit des voisins avec la distance (sous forme de tuple)
 for indexX in point_unique.index:
     for indexParcours in point_unique.index:
         if point_unique.loc[indexX, "nom_point"] == itineraire.loc[indexParcours, "nom_dep"]:
@@ -116,3 +125,24 @@ for indexX in point_unique.index:
         elif point_unique.loc[indexX, "nom_point"] == itineraire.loc[indexParcours, "nom_arr"]:
              dictionnaire_voisin_distance[point_unique.loc[indexX, "nom_point"]].append((itineraire.loc[indexParcours, "nom_dep"], itineraire.loc[indexParcours, "distance"]))
 
+# Partie D.3
+
+nom_point = list(dictionnaire_voisin_distance.keys())
+        
+def nom(indice):
+    return itineraire.iloc[indice].name
+
+def indice_nom(nomPoint):
+    for ind in range(len(nom_point)): 
+        if itineraire.iloc[ind].name == nomPoint:
+            return ind
+
+for i in range (len(nom_point)):
+    nom_point[i] = []
+    
+for i in range(len(nom_point)):
+    for j in range(len(nom_point)):
+        if itineraire.loc[j, "nom_arr"] == dictionnaire_voisin[nom_point[i]]
+            nom_point[i][j].append(dictionnaire_voisin_distance[nom(i)])
+
+            
