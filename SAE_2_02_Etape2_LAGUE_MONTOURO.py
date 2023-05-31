@@ -2,7 +2,7 @@
 import pandas as pd
 from math import pi, cos, acos, sin
 import numpy as np
-from graphics import GraphWin, Circle, Point
+from graphics import GraphWin, Circle, Point, Line
 
 """différents chemins d'aacès selon les machines utilisées"""
 itineraire = pd.read_table('F://Documents/IUT/Annee1/s2/mahs/fichier-itineraires-randonnee.csv',
@@ -193,7 +193,7 @@ def bellman(arret_dep, arret_ariv):
 
 
 #Algorithme de djikstra
-
+##Celui ci ne marche pas
 def djikstra(arret_dep, arret_arriv):
     """
     Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Belmann.
@@ -255,6 +255,58 @@ def djikstra(arret_dep, arret_arriv):
     chemin.reverse()
 
     return chemin, round(dist[indice_som(arret_arriv)])
+
+##fonction nécéssaire pour le bon fonctionnement de Dijkstra2
+
+def extract_min(dist,S):
+    min = dist[S[0]]
+    index_min_sommet = S[0]
+    for i in range (1, len(S)):
+        if min > dist[S[i]]:
+            min = dist[S[i]]
+            index_min_sommet = i
+    return index_min_sommet
+
+def reconstitution_chemin(pointDepart, pointArr, pred) :
+    # Reconstitution du chemin à partir des prédécesseurs
+    chemin = [pointArr]
+    sPred = pred[indice_som(pointArr)]
+    chemin.insert(0, sPred)
+    while chemin[0] != pointDepart :
+        sPred = pred[indice_som(sPred)]
+        chemin.insert(0, sPred)
+    return chemin
+
+## Celui ci marche 
+
+def Dijkstra2(arret_dep,arret_arriv):
+    # Initialisation des tableaux de distance et de prédécesseurs
+    dist = [float("inf")] * len(matricepoids) 
+    pred = [None] * len(matricepoids) 
+    # Liste des sommets non visités
+    s = [sommet for sommet in dictionnaire_voisin.keys()]
+    # Sommet courant
+    sCourant = arret_dep
+    dist[indice_som(sCourant)] = 0
+    # Suppression du sommet courant de la liste des sommets non visités
+    s.remove(sCourant)
+    # Boucle principale
+    while s != [] :
+        # Parcours des voisins du sommet courant
+        for i in range(len(dictionnaire_voisin[sCourant])) :
+            # Calcul de la distance à partir du sommet courant
+            # Si elle est inférieure à la distance précédemment enregistrée, on la met à jour
+            if dictionnaire_voisin[sCourant][i][1] + dist[indice_som(sCourant)] < dist[indice_som(dictionnaire_voisin[sCourant][i][0])] :
+                dist[indice_som(dictionnaire_voisin[sCourant][i][0])] = dictionnaire_voisin[sCourant][i][1] + dist[indice_som(sCourant)]
+                pred[indice_som(dictionnaire_voisin[sCourant][i][0])] = sCourant
+        # Extraction du sommet non visité avec la distance minimale
+        sCourant = extract_min(dist, s)
+        s.remove(sCourant)
+    # Si la destination n'a pas de prédécesseur, cela signifie qu'il n'y a pas de chemin entre la source et la destination
+    if pred[indice_som(arret_arriv)] == None :
+        return dist[indice_som(arret_arriv)], pred[indice_som(arret_arriv)]
+    # Sinon, on reconstitue le chemin à partir des prédécesseurs
+    return dist[indice_som(arret_arriv)], reconstitution_chemin(arret_dep, arret_arriv, pred)        
 
 
 #Algorithme de floyd_warshall
@@ -336,19 +388,42 @@ trierListe(ListeLongitude)
 minLongitude = ListeLongitude[0]
 maxLongitude = ListeLongitude[len(Liste) - 1]
 
-def main():
-    fenetre = GraphWin("Ma Fenetre", 900, 900, autoflush = True)
-    for index in itineraire.index:
-        coordonneeDepart = Circle(Point(float(itineraire.loc[index, "longitude_depart"]),
-                           float(itineraire.loc[index, "latitude_depart"])), 1)
-        
-        coordonneeArrivee = Circle(Point(float(itineraire.loc[index, "longitude_arrivée"]),
-                           float(itineraire.loc[index, "latitude_arrivée"])),1)
-        
-        coordonneeDepart.draw(fenetre)
-        coordonneeArrivee.draw(fenetre)
+def changementEchelleLatitude(uneLatitude):
+    return (uneLatitude-45)*2500
 
+def changementEchelleLongitude(uneLongitude):
+    return (uneLongitude-6.3)*2500
+
+def affichageLignePoints():
+    fenetre = GraphWin("Itineraire des points",900, 900)
+    
+    ##affichage des tout les points
+    for index in point_unique.index:
+        point = Circle(Point(changementEchelleLongitude(float(point_unique.loc[index, "longitude"])), 
+                             changementEchelleLatitude(float(point_unique.loc[index, "latitude"]))), 2)
+        fenetre.update()
+        point.draw(fenetre)
+        
+    for index in itineraire.index:
+        
+        pointDeb = (changementEchelleLongitude(float(itineraire.loc[index, "longitude_depart"])),
+                    changementEchelleLatitude(float(itineraire.loc[index, "latitude_depart"])))
+
+        pointArr = (changementEchelleLongitude(float(itineraire.loc[index, "longitude_arrivée"])),
+                    changementEchelleLatitude(float(itineraire.loc[index, "latitude_arrivée"])))
+
+        plusCourtChemin = djikstra(pointDeb, pointArr)
+        plusCourtChemin.setOutline('red')
+        plusCourtChemin.draw(fenetre)
+        dessineLigne = Line(Point(pointDeb[0], pointDeb[1]), Point(pointArr[0], pointArr[1]))
+        dessineLigne.draw(fenetre)  
+        
     fenetre.getMouse()
     fenetre.close()
+               
+        
+print(affichageLignePoints())
 
-print(main())
+"""     plusCourtChemin = djikstra(pointDeb, pointArr)
+        plusCourtChemin.setOutline('red')
+        plusCourtChemin.draw(fenetre)"""
